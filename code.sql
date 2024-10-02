@@ -12,7 +12,7 @@ CREATE TABLE users (
 CREATE TABLE income (
     income_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id),--awino
-    type VARCHAR(50) NOT NULL,  -- e.g., salary, investment,freelance and side gigs, family and friends
+    type VARCHAR(50) NOT NULL,  -- e.g., salary, investment,freelance and side gigs, family and friends.
     amount DECIMAL(10, 2) NOT NULL,
     period VARCHAR(20) NOT NULL, -- e.g.,daily,weekly, monthly, annually
     date DATE NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE income (
 CREATE TABLE expenses (
     expense_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id),
-    type VARCHAR(50) NOT NULL,  -- e.g., groceries,bills, transport, family and friends, shoppings,investments, personal treats.
+    type VARCHAR(50) NOT NULL,  -- e.g., groceries,bills, transport,school fees and kids, family and friends, shoppings,investments, personal treats and upkeep.
     amount DECIMAL(10, 2) NOT NULL,
     description TEXT,
     date DATE NOT NULL,
@@ -35,6 +35,7 @@ CREATE TABLE savings (
     savings_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id),
     goal_id INT REFERENCES saving_goals(goal_id),
+    type VARCHAR(50) NOT NULL,  -- e.g., short-term, long-term,mmf,emergency fund, business funds
     amount DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -56,7 +57,7 @@ CREATE TABLE budget (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     amount DECIMAL(10, 2) NOT NULL,
-    period VARCHAR(20), -- e.g., monthly, annually
+    period VARCHAR(20), -- e.g.,weekly, monthly, annually
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -88,7 +89,7 @@ CREATE TABLE bills (
     description TEXT,
     payment_date DATE NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    recurring BOOLEAN DEFAULT FALSE, -- Indicates if the bill is recurring
+    recurring BOOLEAN DEFAULT FALSE, -- Indicates if the bill is recurring e.g rent,utilities
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
