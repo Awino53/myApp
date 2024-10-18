@@ -1,4 +1,4 @@
-
+ 
 .opening-page{
     text-align: center;
     padding: 100px;
@@ -12,9 +12,30 @@
     margin-bottom: 80px;
 }
 .opening-page a{
-    background-color: blue;
+    background-color: rgb(36, 142, 6);
     padding: 10px 40px;
     border-radius: 10px;
     color: white;
     text-decoration: none;
+}
+#error-message{
+margin: 0;
+}
+.user-input{
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    margin: 50px;
+    gap: 30px;
+}
+#submit{
+    background-color: rgb(36, 142, 6);
+    padding: 10px 50px;
+    border-radius: 10px;
+    color: white;
+    border-style: none;
+}
+#submit:hover{
+    background-color: rgb(24, 108, 4);
+    cursor: pointer;
 }
