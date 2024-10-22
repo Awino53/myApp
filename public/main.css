@@ -1,4 +1,6 @@
- 
+*{
+    text-transform: capitalize;
+}
 .opening-page{
     text-align: center;
     padding: 100px;
@@ -36,6 +38,21 @@ margin: 0;
     border-style: none;
 }
 #submit:hover{
-    background-color: rgb(24, 108, 4);
+    background-color: #186c04;
     cursor: pointer;
+}
+
+.target{
+    display: flex;
+}
+
+/* for register.ejs styling */
+aside{
+    background-color: #af0b0b;
+}
+ul{
+    list-style: none;
+    display: flex;
+    gap: 200px;
+    padding: 20px;
 }

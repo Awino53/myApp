@@ -25,7 +25,7 @@ CREATE TABLE income (
 CREATE TABLE expenses (
     expense_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    type VARCHAR(50) NOT NULL,  -- e.g., groceries, bills, transport, school fees, kids, family and friends, shopping, investments, personal upkeep.
+    type VARCHAR(50) NOT NULL,  -- e.g., groceries, bills and utilities, transport, school fees, kids, family and friends,food and shopping, investments, personal upkeep,health and fitness.
     amount DECIMAL(10, 2) NOT NULL,
     description TEXT,
     date DATE NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE budget (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- 7. Debts Table
+-- 7. Debts and loan Table
 CREATE TABLE debts (
     debt_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
