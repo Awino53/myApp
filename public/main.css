@@ -48,11 +48,25 @@ margin: 0;
 
 /* for register.ejs styling */
 aside{
-    background-color: #af0b0b;
+    background-color: #d8bebe;
+    padding: 2px;
 }
 ul{
     list-style: none;
     display: flex;
     gap: 200px;
-    padding: 20px;
+}
+
+/* for home.ejs styling */
+.home-btn{
+    background-color: rgb(70, 214, 31);
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: none;
+    margin: 20px;
+    
+}
+.home-btn a{
+    text-decoration: none;
+    color: black;
 }
