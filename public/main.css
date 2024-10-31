@@ -46,16 +46,7 @@ margin: 0;
     display: flex;
 }
 
-/* for register.ejs styling */
-aside{
-    background-color: #d8bebe;
-    padding: 2px;
-}
-ul{
-    list-style: none;
-    display: flex;
-    gap: 200px;
-}
+
 
 /* for home.ejs styling */
 .home-btn{

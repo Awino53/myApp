@@ -8,6 +8,44 @@
     <link rel="shortcut icon" href="logo.png" type="image/x-icon">
 </head>
 <body>
+    <style>
+        form {
+            width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        label, input {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px;
+            background-color: #14d01e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0e3803;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            display: block;
+            margin-top: -8px;
+            margin-bottom: 10px;
+        }
+    </style>
+    
     <form action="/register" method="post" class="user-input" id="registrationForm">
 
         <div class="input">

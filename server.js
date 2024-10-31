@@ -4,6 +4,7 @@ const app = express()
 
 app.use(express.static ("public"))//serve static 
 
+ 
 app.get("/", (req,res)=>{
     res.render("index.ejs")
 })
@@ -19,6 +20,7 @@ app.post("/register", (req,res)=>{
 app.get("/home", (req,res)=>{
     res.render("home.ejs")
 })
+
 
 app.get("/categories", (req,res)=>{
     res.render("categories.ejs")

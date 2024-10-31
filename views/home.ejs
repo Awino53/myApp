@@ -1,37 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-</head>
-<body>
-    <h1>date and day api</h1>
-    <button class="home-btn" id="home-btn"><a href="">today's expenses</a></button>
-    <h2>edit expense</h2>
-    <h1>total of todays expense to be shown here</h1>
-    
-    <div class="target">
-        <div class="mytarget">
-          <h3>my targets</h3>
-          <div class="targets">
-               <p>this space highlights the different targets to be achieved and it should be viewable at the first page when you open your app they should also be clickable to allow editing and they should also be in a pie chart to show how much has been saved and how much remaining so far</p>
-            </div>
-       </div>
-       <div class="addnewtarget">
-            <h3>+ add new target<h3>
-        </div>
-
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="calendar">
+      <div class="month-title">
+        <span id="month"></span>
+        <span id="day"></span>
+      </div>
+      <div class="days">
+        <span>S</span>
+        <span>M</span>
+        <span>T</span>
+        <span>W</span>
+        <span>T</span>
+        <span>F</span>
+        <span>S</span>
+      </div>
+      <div class="week-dates" id="week-dates">
+        <!-- JavaScript will populate the week dates here -->
+      </div>
     </div>
 
-    <div class="recent-transaction">
-        <h1>Recent Transactions</h1>
-        <p>this space is supposed to be occupied by the recent expenses edited for example that of yesterday and is supposed to be on the first page too </p>
-    </div>
-   
-    
-    
-</body>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const today = new Date();
+        const currentMonth = today.toLocaleString("default", { month: "long" });
+        const currentDate = today.getDate();
+
+        // Display the current month and today's date
+        document.getElementById("month").innerText = currentMonth;
+        document.getElementById("day").innerText = currentDate;
+
+        const weekDatesContainer = document.getElementById("week-dates");
+        weekDatesContainer.innerHTML = ""; // Clear any existing dates
+
+        // Calculate the current week dates
+        const firstDayOfWeek = today.getDate() - today.getDay();
+        for (let i = 0; i < 7; i++) {
+          const dateElement = document.createElement("div");
+          dateElement.classList.add("date");
+
+          const weekDate = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            firstDayOfWeek + i
+          );
+          dateElement.innerText = weekDate.getDate();
+
+          // Highlight today
+          if (weekDate.getDate() === currentDate) {
+            dateElement.classList.add("today");
+          }
+
+          weekDatesContainer.appendChild(dateElement);
+        }
+      });
+
+      // Function to update the calendar
+      function updateCalendar() {
+        const today = new Date();
+        const currentMonth = today.toLocaleString("default", { month: "long" });
+        const currentDate = today.getDate();
+
+        // Update the month and date display
+        document.getElementById("month").innerText = currentMonth;
+        document.getElementById("day").innerText = currentDate;
+
+        // Clear and repopulate week dates
+        const weekDatesContainer = document.getElementById("week-dates");
+        weekDatesContainer.innerHTML = "";
+
+        // Calculate the current week dates
+        const firstDayOfWeek = today.getDate() - today.getDay();
+        for (let i = 0; i < 7; i++) {
+          const dateElement = document.createElement("div");
+          dateElement.classList.add("date");
+
+          const weekDate = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            firstDayOfWeek + i
+          );
+          dateElement.innerText = weekDate.getDate();
+
+          // Highlight today
+          if (weekDate.getDate() === currentDate) {
+            dateElement.classList.add("today");
+          }
+
+          weekDatesContainer.appendChild(dateElement);
+        }
+      }
+
+      // Initial calendar update
+      updateCalendar();
+
+      // Check every minute if the date has changed to update at midnight
+      setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+          updateCalendar(); // Refresh the calendar when it’s midnight
+        }
+      }, 60000); // Check every 60 seconds
+    </script>
+
+    <style>
+      .calendar {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .month-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .days {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .week-dates {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .week-dates .date {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+      }
+
+      .week-dates .today {
+        background-color: #4caf50;
+        color: white;
+        font-weight: bold;
+      }
+    </style>
+
+    <%- include('_footer.ejs') %>
+  </body>
 </html>
