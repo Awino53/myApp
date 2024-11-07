@@ -1,3 +1,4 @@
+//const { render } = require("ejs")
 const express = require("express")
 
 const app = express()
@@ -9,12 +10,23 @@ app.get("/", (req,res)=>{
     res.render("index.ejs")
 })
 
+
+
+//signing in buttons
+app.post("/register", (req,res)=>{
+    res.render("register.ejs")
+})
+
 app.get("/signin", (req,res)=>{
     res.render("signin.ejs")
 })
 
-app.post("/register", (req,res)=>{
-    res.render("register.ejs")
+app.post("/login",(req,res)=>{
+    res.render("login.ejs")
+})
+
+app.get("/login",(req,res)=>{
+    res.render("login.ejs")
 })
 
 app.get("/home", (req,res)=>{
@@ -39,7 +51,19 @@ app.get("/profile", (req,res)=>{
 })
 
 
-
+//footer landing page
+app.get("/terms",(req,res)=>{
+    res.render("terms.ejs")
+})
+app.get("/policy",(req,res)=>{
+    res.render("policy.ejs")
+})
+app.get("/contact",(req,res)=>{
+    res.render("contact.ejs")
+})
+app.get("/faqs",(req,res)=>{
+    res.render("faqs.ejs")
+})
 
 
 //page not found
