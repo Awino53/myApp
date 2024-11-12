@@ -73,6 +73,102 @@
       </nav>
     </header>
 
+    <style>
+      /* Dropdown container styling */
+      .dropdown_menu {
+        position: relative;
+        display: inline-block;
+      }
+  
+      /* Dropdown icon button */
+      .dropdown_menu i {
+        cursor: pointer;
+        color: #2e7d32; /* Dark green for icon */
+        padding: 20px;
+        font-size: 24px;
+      }
+  
+      /* Dropdown menu hidden by default */
+      .dropdown_menu ul {
+        display: none;
+        position: absolute;
+        background-color: #388e3c; /* Medium green for menu background */
+        list-style-type: none;
+        padding: 10px 0;
+        margin: 0;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+        min-width: 200px;
+        z-index: 1;
+      }
+  
+      /* Dropdown items styling */
+      .dropdown_menu ul li a {
+        display: flex;
+        align-items: center;
+        padding: 8px 15px;
+        color: #e8f5e9; /* Light green for text */
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+      }
+  
+      /* Icon styling within links */
+      .dropdown_menu ul li a i {
+        margin-right: 8px;
+      }
+  
+      /* Hover effect for menu items */
+      .dropdown_menu ul li a:hover {
+        background-color: #1b5e20; /* Darker green on hover */
+      }
+  
+      /* Rounded corners and border color for dropdown */
+      .dropdown_menu ul {
+        border: 1px solid #1b5e20; /* Dark border for dropdown menu */
+      }
+    </style>
+  </head>
+  <body>
+  
+    <!-- Dropdown Menu -->
+    <div class="dropdown_menu">
+      <i class="fa-solid fa-bars fa-lg" onclick="toggleDropdown()"></i>
+      <ul id="dropdownList">
+        <li>
+          <a href="#"><i class="fa-solid fa-user"></i>Profile</a>
+        </li>
+        <li>
+          <a href="#"><i class="fa-regular fa-note-sticky"></i>Notes</a>
+        </li>
+        <li>
+          <a href="#"><i class="fa-solid fa-bell"></i>Notifications</a>
+        </li>
+        <li>
+          <a href="#"><i class="fa-solid fa-gear"></i>Settings</a>
+        </li>
+      </ul>
+    </div>
+  
+    <script>
+      // Toggle the dropdown menu
+      function toggleDropdown() {
+        const dropdown = document.getElementById("dropdownList");
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      }
+  
+      // Close the dropdown if clicked outside
+      window.onclick = function(event) {
+        if (!event.target.matches('.fa-bars')) {
+          const dropdown = document.getElementById("dropdownList");
+          if (dropdown.style.display === "block") {
+            dropdown.style.display = "none";
+          }
+        }
+      };
+    </script>
+
     <img
       src="mon.jpg"
       alt=""
@@ -482,7 +578,7 @@
     <!-- CTA Section -->
     <div class="cta-section">
       <h2 class="cta-header">Start Managing Your Money Better Today</h2>
-      <a href="/signin" class="cta-button" >Get Started Free</a>
+      <a href="/signin" class="cta-button">Get Started Free</a>
     </div>
 
     <!-- Footer Section -->
