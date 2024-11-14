@@ -29,89 +29,6 @@
       </div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const today = new Date();
-        const currentMonth = today.toLocaleString("default", { month: "long" });
-        const currentDate = today.getDate();
-
-        // Display the current month and today's date
-        document.getElementById("month").innerText = currentMonth;
-        document.getElementById("day").innerText = currentDate;
-
-        const weekDatesContainer = document.getElementById("week-dates");
-        weekDatesContainer.innerHTML = ""; // Clear any existing dates
-
-        // Calculate the current week dates
-        const firstDayOfWeek = today.getDate() - today.getDay();
-        for (let i = 0; i < 7; i++) {
-          const dateElement = document.createElement("div");
-          dateElement.classList.add("date");
-
-          const weekDate = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            firstDayOfWeek + i
-          );
-          dateElement.innerText = weekDate.getDate();
-
-          // Highlight today
-          if (weekDate.getDate() === currentDate) {
-            dateElement.classList.add("today");
-          }
-
-          weekDatesContainer.appendChild(dateElement);
-        }
-      });
-
-      // Function to update the calendar
-      function updateCalendar() {
-        const today = new Date();
-        const currentMonth = today.toLocaleString("default", { month: "long" });
-        const currentDate = today.getDate();
-
-        // Update the month and date display
-        document.getElementById("month").innerText = currentMonth;
-        document.getElementById("day").innerText = currentDate;
-
-        // Clear and repopulate week dates
-        const weekDatesContainer = document.getElementById("week-dates");
-        weekDatesContainer.innerHTML = "";
-
-        // Calculate the current week dates
-        const firstDayOfWeek = today.getDate() - today.getDay();
-        for (let i = 0; i < 7; i++) {
-          const dateElement = document.createElement("div");
-          dateElement.classList.add("date");
-
-          const weekDate = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            firstDayOfWeek + i
-          );
-          dateElement.innerText = weekDate.getDate();
-
-          // Highlight today
-          if (weekDate.getDate() === currentDate) {
-            dateElement.classList.add("today");
-          }
-
-          weekDatesContainer.appendChild(dateElement);
-        }
-      }
-
-      // Initial calendar update
-      updateCalendar();
-
-      // Check every minute if the date has changed to update at midnight
-      setInterval(() => {
-        const now = new Date();
-        if (now.getHours() === 0 && now.getMinutes() === 0) {
-          updateCalendar(); // Refresh the calendar when it’s midnight
-        }
-      }, 60000); // Check every 60 seconds
-    </script>
-
     <style>
       .calendar {
         text-align: center;
@@ -155,6 +72,86 @@
       }
     </style>
 
+    <!-- this space is for editing expenditure -->
+
+    <table id="expensesTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Description</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+       
+      <tbody>
+        <% if (expenses && expenses.length > 0) { %> 
+          <% expenses.forEach(expense => { 
+            const formattedDate = expense.date ? new Date(expense.date).toISOString().slice(0, 10) : 'Invalid Date';
+          %>
+            <tr>
+              <td><%= expense.type %></td>
+              <td><%= expense.amount %></td>
+              <td><%= expense.description %></td>
+              <td><%= formattedDate %></td>
+              <td>
+                <button
+                  class="edit-button"
+                  data-expense-id="<%= expense.expense_id %>"
+                  data-type="<%= JSON.stringify(expense.type) %>"
+                  data-amount="<%= expense.amount %>"
+                  data-description="<%= JSON.stringify(expense.description) %>"
+                  data-date="<%= formattedDate %>"
+                  onclick="openEditForm(this)"
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+          <% }) %> 
+        <% } else { %>
+          <tr>
+            <td colspan="5">No expenses found</td>
+          </tr>
+        <% } %>
+      </tbody>
+      
+       
+      
+      <tfoot>
+        <tr>
+          <td colspan="5">Total: ksh.<span id="totalExpenses"></span></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Edit Form Modal -->
+    <div id="editFormModal" style="display: none">
+      <form id="editExpenseForm">
+        <label>Type: <input type="text" id="editType" name="type" /></label
+        ><br />
+        <label
+          >Amount:
+          <input
+            type="number"
+            id="editAmount"
+            name="amount"
+            step="0.01" /></label
+        ><br />
+        <label
+          >Description:
+          <input type="text" id="editDescription" name="description" /></label
+        ><br />
+        <label>Date: <input type="date" id="editDate" name="date" /></label
+        ><br />
+        <button type="submit">Save</button>
+        <button type="button" onclick="closeEditForm()">Cancel</button>
+      </form>
+    </div>
+
     <%- include('_footer.ejs') %>
+
+    <script src="index.js"></script>
   </body>
 </html>
