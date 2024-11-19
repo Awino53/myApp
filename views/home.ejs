@@ -10,6 +10,46 @@
     />
   </head>
   <body>
+    <nav style="background-color: #09580c;">
+      <div class="image">
+        <img
+          src="/white-logo.png"
+          alt=""
+          height="70vh"
+        />
+      </div>
+
+      <div class="navigation">
+        <ul>
+          <li><a href="/home">home</a></li>
+          <li><a href="/wallet">wallet</a></li>
+          <li><a href="/targets">targets</a></li>
+          <li><a href="/reports">reports</a></li>
+          <li><a href="/help">help</a></li>
+           
+        </ul>
+
+        <ul class="last-nav">
+          <li>
+            <a href=""
+              ><i class="fa-solid fa-bell" style="color: #020a18"></i
+            ></a>
+          </li>
+          <li>
+            <a href=""
+              ><i class="fa-solid fa-gear" style="color: #020c1d"></i
+            ></a>
+          </li>
+          <% if(locals.isLoggedIn){ %>
+            <a href="/home"></a>
+            <li><a href="/logout">log out</a></li>
+            <% }else{ %>
+            <a href="/signin">sign in</a>
+          <% } %>
+          
+        </ul>
+      </div>
+    </nav>
     <div class="calendar">
       <div class="month-title">
         <span id="month"></span>
@@ -30,6 +70,41 @@
     </div>
 
     <style>
+      body{
+        margin: 0;
+        padding: 0;
+      }
+      nav {
+        display: flex;
+        gap: 10px;
+      }
+      .navigation{
+        display: flex;
+        gap: 140px;
+        padding: 30px;
+      }
+      .navigation ul{
+        display: flex;
+        gap: 30px;
+      
+      }
+      .navigation li{
+        list-style: none; 
+      }
+      .navigation a{
+        text-decoration: none;
+        color: rgb(20, 21, 20);
+        font-size: 1.3em;
+        font-weight: bold;
+        padding: 10px;
+    
+      }
+      .navigation a:hover{
+        border: 1px solid #4caf50;
+        border-radius: 10px;
+      }
+       
+      
       .calendar {
         text-align: center;
         padding: 40px;
@@ -72,85 +147,7 @@
       }
     </style>
 
-    <!-- this space is for editing expenditure -->
-
-    <table id="expensesTable">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Amount</th>
-          <th>Description</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-       
-      <tbody>
-        <% if (expenses && expenses.length > 0) { %> 
-          <% expenses.forEach(expense => { 
-            const formattedDate = expense.date ? new Date(expense.date).toISOString().slice(0, 10) : 'Invalid Date';
-          %>
-            <tr>
-              <td><%= expense.type %></td>
-              <td><%= expense.amount %></td>
-              <td><%= expense.description %></td>
-              <td><%= formattedDate %></td>
-              <td>
-                <button
-                  class="edit-button"
-                  data-expense-id="<%= expense.expense_id %>"
-                  data-type="<%= JSON.stringify(expense.type) %>"
-                  data-amount="<%= expense.amount %>"
-                  data-description="<%= JSON.stringify(expense.description) %>"
-                  data-date="<%= formattedDate %>"
-                  onclick="openEditForm(this)"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          <% }) %> 
-        <% } else { %>
-          <tr>
-            <td colspan="5">No expenses found</td>
-          </tr>
-        <% } %>
-      </tbody>
-      
-       
-      
-      <tfoot>
-        <tr>
-          <td colspan="5">Total: ksh.<span id="totalExpenses"></span></td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <!-- Edit Form Modal -->
-    <div id="editFormModal" style="display: none">
-      <form id="editExpenseForm">
-        <label>Type: <input type="text" id="editType" name="type" /></label
-        ><br />
-        <label
-          >Amount:
-          <input
-            type="number"
-            id="editAmount"
-            name="amount"
-            step="0.01" /></label
-        ><br />
-        <label
-          >Description:
-          <input type="text" id="editDescription" name="description" /></label
-        ><br />
-        <label>Date: <input type="date" id="editDate" name="date" /></label
-        ><br />
-        <button type="submit">Save</button>
-        <button type="button" onclick="closeEditForm()">Cancel</button>
-      </form>
-    </div>
-
-    <%- include('_footer.ejs') %>
+    <!-- <%- include('_footer.ejs') %> -->
 
     <script src="index.js"></script>
   </body>

@@ -3,36 +3,23 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const mysql = require("mysql");
-
+const path = require("path");
 const app = express();
 app.use(express.static("public")); //serve static
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded (form data)
 app.use(express.json()); // For parsing application/json (if needed)
 
- 
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 app.use(
   session({
     secret: "keyboard cat",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }
+    cookie: { secure: false, httpOnly: true },
   })
 );
-
-// Authorization middleware
-// Authorization middleware
-app.use((req, res, next) => {
-  res.locals.user = req.session?.user;
-  res.locals.isLoggedIn = req.session?.isLoggedIn || false;
-
-  // If not logged in and trying to access a page other than sign in or login, redirect
-  if (!res.locals.isLoggedIn && req.path !== "/signin" && req.path !== "/login" && req.path !== "/") {
-    return res.redirect("/index");  // Redirect to the landing page if not logged in
-  }
-  next();
-});
-
 
 // Connect to database
 const db = mysql.createConnection({
@@ -42,8 +29,24 @@ const db = mysql.createConnection({
   password: "",
 });
 
-//hashing password
+// Authorization middleware
+app.use((req, res, next) => {
+  res.locals.user = req.session?.user;
+  res.locals.isLoggedIn = req.session?.isLoggedIn || false;
 
+  // If not logged in and trying to access a page other than sign in or login, redirect
+  if (
+    !res.locals.isLoggedIn &&
+    req.path !== "/signin" &&
+    req.path !== "/login" &&
+    req.path !== "/"
+  ) {
+    return res.redirect("/"); // Redirect to the landing page if not logged in
+  }
+  next();
+});
+
+//hashing password
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(3);
 // Route to migrate and hash passwords
@@ -117,16 +120,12 @@ app.post("/register", (req, res) => {
       return res.status(500).send("Database error");
     }
 
-    req.session.user = { id: result.insertId, email };
-    req.session.isLoggedIn = true;
-
-    console.log("Session after registration:", req.session); // Debugging session
 
     // Redirect to home if login is successful and session is set
     if (req.session.isLoggedIn) {
       return res.redirect("/home");
     } else {
-      return res.redirect("/index"); // Fallback redirect
+      return res.redirect("/"); // Fallback redirect
     }
   });
 });
@@ -191,21 +190,84 @@ app.get("/signin", (req, res) => {
 
 // Route to render the login page
 app.get("/login", (req, res) => {
-  res.render("login.ejs"); // This should render the login page where users can input their credentials
+  if (req.session.isLoggedIn) {
+    return res.redirect("/home");
+  } else {
+    res.render("login.ejs", {
+      loginError: "Incorrect Credentials. Try again!!",
+    });
+  }
 });
 
 //aditional routes
+app.get("/wallet", (req, res) => {
+  res.render("wallet.ejs");
+});
 app.get("/categories", (req, res) => {
   res.render("categories.ejs");
 });
-app.get("/targets", (req, res) => {
-  res.render("targets.ejs");
-});
+
 app.get("/reports", (req, res) => {
   res.render("reports.ejs");
 });
 app.get("/profile", (req, res) => {
   res.render("profile.ejs");
+});
+//this is target space
+// Fetch all goals for the logged-in user
+app.get("/targets", (req, res) => {
+  if (!req.session.isLoggedIn) {
+    return res.redirect("/signin");
+  }
+
+  const userId = req.session.user.id; // Assuming the session contains user details
+  const query = "SELECT * FROM saving_goals WHERE user_id = ?";
+
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching goals:", err);
+      return res.status(500).send("Database error");
+    }
+    res.render("targets", { goals: results }); // Render the goals page with data
+  });
+});
+
+// Add a new goal for the logged-in user
+app.post("/add-goal", (req, res) => {
+  if (!req.session.isLoggedIn) {
+    return res.redirect("/signin");
+  }
+
+  const { name, target_amount } = req.body;
+  const userId = req.session.user.id;
+  const query =
+    "INSERT INTO saving_goals (user_id, name, target_amount, saved_amount, period, created_at) VALUES (?, ?, ?, 0, NULL, NOW())";
+
+  db.query(query, [userId, name, target_amount], (err, results) => {
+    if (err) {
+      console.error("Error adding goal:", err);
+      return res.status(500).send("Database error");
+    }
+    res.redirect("/targets");
+  });
+});
+
+// Update an existing goal's saved amount
+app.post("/update-goal", (req, res) => {
+  if (!req.session.isLoggedIn) {
+    return res.redirect("/signin");
+  }
+
+  const { goal_id, saved_amount } = req.body;
+  const query = "UPDATE saving_goals SET saved_amount = ? WHERE goal_id = ?";
+
+  db.query(query, [saved_amount, goal_id], (err, results) => {
+    if (err) {
+      console.error("Error updating goal:", err);
+      return res.status(500).send("Database error");
+    }
+    res.redirect("/targets");
+  });
 });
 
 //footer landing page
@@ -222,40 +284,10 @@ app.get("/faqs", (req, res) => {
   res.render("faqs.ejs");
 });
 
-//edited expenses are getting managed from this end
-// Edit expense endpoint
-app.post("/expenses/edit/:expense_id", (req, res) => {
-  const expenseId = req.params.expense_id;
-  const { type, amount, description, date } = req.body;
-
-  const query = `
-    UPDATE expenses 
-    SET type = ?, amount = ?, description = ?, date = ?
-    WHERE expense_id = ?`;
-
-  db.query(
-    query,
-    [type, amount, description, date, expenseId],
-    (err, result) => {
-      if (err) {
-        console.error("Error updating expense:", err);
-        return res.status(500).send("Database error");
-      }
-      res.send("Expense updated successfully");
-    }
-  );
-});
-
-app.get("/daily-expenses", (req, res) => {
-  const userId = req.session.user.id;
-
-  const query = "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC";
-  db.query(query, [userId], (err, expenses) => {
-    if (err) {
-      console.error("Error retrieving expenses:", err);
-      return res.status(500).send("Database error");
-    }
-    res.render("daily-expenses.ejs", { expenses });
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) return res.status(500).render("500.ejs");
+    res.redirect("/");
   });
 });
 

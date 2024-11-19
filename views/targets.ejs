@@ -1,18 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-</head>
-<body>
-    <h1>this is targets page</h1>
-    <h1>targets itself</h1>
-    <h2>saving goals</h2>
-    <h3>debts payments</h3>
-    <h4>add new targets</h4>
-    <%- include('_footer.ejs') %>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Savings Goals</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <h1>My Savings Goals</h1>
+
+    <!-- Pie Chart -->
+    <canvas id="goalsChart" width="10%" height="40vh"></canvas>
+
+    <!-- Goal Editing Form -->
+    <div id="goalForm">
+      <h2>Edit Savings Goal</h2>
+      <form id="updateGoalForm">
+        <label for="goalId">Goal:</label>
+        <select id="goalId" name="goal_id">
+          <% goals.forEach(goal => { %>
+          <option value="<%= goal.goal_id %>">
+            <%= goal.name %> (Target: <%= goal.target_amount %>, Saved: <%=
+            goal.saved_amount %>)
+          </option>
+          <% }) %>
+        </select>
+        <br />
+        <label for="savedAmount">Amount Saved:</label>
+        <input type="number" id="savedAmount" name="saved_amount" required />
+        <button type="submit">Update</button>
+      </form>
+    </div>
+
+    <!-- Add New Goal -->
+    <div id="addGoalForm">
+      <h2>Add New Goal</h2>
+      <form id="newGoalForm">
+        <label for="goalName">Goal Name:</label>
+        <input type="text" id="goalName" name="name" required />
+        <br />
+        <label for="targetAmount">Target Amount:</label>
+        <input type="number" id="targetAmount" name="target_amount" required />
+        <button type="submit">Add Goal</button>
+      </form>
+    </div>
+
+    <script>
+      // Get data from server-side rendering and parse it
+      const goals = JSON.parse("<%- JSON.stringify(goals) %>");
+      // Render Pie Chart
+      const ctx = document.getElementById("goalsChart").getContext("2d");
+      const chartData = {
+        labels: goals.map((goal) => goal.name),
+        datasets: [
+          {
+            data: goals.map((goal) => goal.saved_amount),
+            backgroundColor: [
+              "#FF6384",
+              "#36A2EB",
+              "#FFCE56",
+              "#4BC0C0",
+              "#9966FF",
+              "#FF9F40",
+            ],
+          },
+        ],
+      };
+      const chartOptions = {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          tooltip: { enabled: true },
+        },
+      };
+      const goalsChart = new Chart(ctx, {
+        type: "pie",
+        data: chartData,
+        options: chartOptions,
+      });
+
+      // Update Goal Form Submission
+      document
+        .getElementById("updateGoalForm")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const goalId = document.getElementById("goalId").value;
+          const savedAmount = document.getElementById("savedAmount").value;
+          fetch("/update-goal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              goal_id: goalId,
+              saved_amount: savedAmount,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              alert(data.message);
+              location.reload();
+            });
+        });
+
+      // Add New Goal Form Submission
+      document.getElementById("newGoalForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("goalName").value;
+        const targetAmount = document.getElementById("targetAmount").value;
+        fetch("/add-goal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, target_amount: targetAmount }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            alert(data.message);
+            location.reload();
+          });
+      });
+    </script>
+  </body>
 </html>
