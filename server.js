@@ -4,7 +4,12 @@ const session = require("express-session");
 const bcrypt = require("bcrypt");
 const mysql = require("mysql");
 const path = require("path");
-const app = express();
+
+ 
+
+const app = express(); // Initialize app first
+ 
+
 app.use(express.static("public")); //serve static
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded (form data)
 app.use(express.json()); // For parsing application/json (if needed)
@@ -16,7 +21,7 @@ app.use(
   session({
     secret: "keyboard cat",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { secure: false, httpOnly: true },
   })
 );
@@ -27,6 +32,11 @@ const db = mysql.createConnection({
   database: "spendapp",
   user: "root",
   password: "",
+});
+
+db.connect((err) => {
+  if (err) throw err;
+  console.log("MySQL connected...");
 });
 
 // Authorization middleware
@@ -48,7 +58,7 @@ app.use((req, res, next) => {
 
 //hashing password
 const saltRounds = 10;
-const salt = bcrypt.genSaltSync(3);
+const salt = bcrypt.genSaltSync(7);
 // Route to migrate and hash passwords
 app.get("/migrate-passwords", (req, res) => {
   // Step 1: Fetch users from the database
@@ -104,34 +114,97 @@ app.get("/migrate-passwords", (req, res) => {
   });
 });
 
-//register new user
-// Registration route
+// Index route
+app.get("/", (req, res) => {
+  if (req.session.isLoggedIn) {
+    return res.redirect("/home"); // Redirect to home if logged in
+  }
+  res.render("index.ejs");
+});
+
+
+//signing in route
+app.get("/signin", (req, res) => {
+  if (req.session.isLoggedIn) {
+    return res.redirect("/home"); // Redirect to home if already logged in
+  }
+  res.render("signin.ejs");
+});
+
+
+// Register new user
 app.post("/register", (req, res) => {
-  const { email, full_name, password } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const { email, full_name, password, confirmPassword } = req.body;
 
-  const query =
-    "INSERT INTO users (email, full_name, password) VALUES (?, ?, ?)";
-  const values = [email, full_name, hashedPassword];
+  // Validate that passwords match
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .render("register", { error: "Passwords do not match!" });
+  }
 
-  db.query(query, values, (err, result) => {
+  // Check if email already exists
+  const query = "SELECT * FROM users WHERE email = ?";
+  db.query(query, [email], (err, results) => {
     if (err) {
-      console.error("Error inserting user:", err);
-      return res.status(500).send("Database error");
+      console.error("Database error:", err);
+      return res.status(500).render("register", { error: "Database error" });
     }
 
-
-    // Redirect to home if login is successful and session is set
-    if (req.session.isLoggedIn) {
-      return res.redirect("/home");
-    } else {
-      return res.redirect("/"); // Fallback redirect
+    // If email already exists
+    if (results.length > 0) {
+      return res
+        .status(400)
+        .render("register", { error: "Email already in use" });
     }
+
+    // Hash the password before storing
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error("Error processing password:", err);
+        return res
+          .status(500)
+          .render("register", { error: "Error processing password" });
+      }
+
+      // Insert the new user into the database
+      const insertQuery =
+        "INSERT INTO users (email, full_name, password) VALUES (?, ?, ?)";
+      db.query(
+        insertQuery,
+        [email, full_name, hashedPassword],
+        (err, result) => {
+          if (err) {
+            console.error("Error inserting user:", err);
+            return res
+              .status(500)
+              .render("register", { error: "Error inserting user" });
+          }
+
+          // Log the user in after successful registration
+          req.session.user = { email };
+          req.session.isLoggedIn = true;
+
+          // Redirect to home page
+          res.redirect("/home");
+        }
+      );
+    });
   });
 });
 
-// Login logic
-// Login route
+// Route to render the login page (sign in page)
+app.get("/login", (req, res) => {
+  if (req.session.isLoggedIn) {
+    return res.redirect("/home"); // Redirect to home if logged in
+  }
+  res.render("login.ejs", {
+    // Render signin page with login error
+    loginError: "Incorrect Credentials. Try again!!",
+  });
+});
+
+// Login route - post request to authenticate user
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -154,58 +227,199 @@ app.post("/login", (req, res) => {
       if (isMatch) {
         req.session.user = { id: user.user_id, email: user.email };
         req.session.isLoggedIn = true;
-        res.redirect("/home"); // Redirect to home after login
+        res.redirect("/home"); // Redirect to home after successful login
       } else {
-        res.status(401).send("Invalid credentials");
+        res.status(401).send("Authentication failed");
       }
     });
   });
 });
 
-// Index route
-app.get("/", (req, res) => {
-  if (req.session.isLoggedIn) {
-    return res.redirect("/home");
-  }
-  res.render("index.ejs");
-});
-
-// Home route (protected)
-app.get("/home", (req, res) => {
-  if (req.session.isLoggedIn) {
-    res.render("home"); // Render home page for logged-in users
-  } else {
-    console.log("Not logged in. Redirecting to signin.");
-    res.redirect("/signin"); // Redirect to signin if not logged in
-  }
-});
-
-//signing in route
-app.get("/signin", (req, res) => {
-  if (req.session.isLoggedIn) {
-    return res.redirect("/home"); // Redirect to home if already logged in
-  }
-  res.render("signin.ejs");
-});
-
-// Route to render the login page
+// Optionally, render login page when GET request is made to /login
 app.get("/login", (req, res) => {
   if (req.session.isLoggedIn) {
-    return res.redirect("/home");
-  } else {
-    res.render("login.ejs", {
-      loginError: "Incorrect Credentials. Try again!!",
-    });
+    return res.redirect("/home"); // If already logged in, redirect to home
   }
+  res.render("signin.ejs", { loginError: null }); // Show login page with no error initially
 });
+
+
+
+/* test */
+
+app.get("/home", (req, res) => {
+  const userId = 1; // Replace with the session user ID
+
+  // Query categories
+  db.query(
+    "SELECT * FROM categories WHERE user_id IS NULL OR user_id = ?",
+    [userId],
+    (error, categories) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).send("Error loading categories: " + error.message);
+      }
+
+      // Query income data
+      db.query(
+        `SELECT income.*, categories.name AS category_name 
+        FROM income 
+        LEFT JOIN categories ON income.category_id = categories.category_id`,
+        (error, income) => {
+          if (error) {
+            console.log(error);
+            return res.status(500).send("Error loading income data: " + error.message);
+          }
+
+          // Query total income
+          db.query(
+            "SELECT SUM(amount) AS total FROM income WHERE user_id = ?",
+            [userId],
+            (error, totalIncome) => {
+              if (error) {
+                console.log(error);
+                return res.status(500).send("Error calculating total income: " + error.message);
+              }
+
+              // Query income by category
+              db.query(
+                `SELECT categories.name AS category_name, SUM(income.amount) AS total
+                FROM income
+                LEFT JOIN categories ON income.category_id = categories.category_id
+                WHERE income.user_id = ?
+                GROUP BY income.category_id`,
+                [userId],
+                (error, incomeByCategory) => {
+                  if (error) {
+                    console.log(error);
+                    return res.status(500).send("Error calculating income by category: " + error.message);
+                  }
+
+                  // Query expenses data
+                  db.query(
+                    `SELECT expenses.*, categories.name AS category_name 
+                    FROM expenses 
+                    LEFT JOIN categories ON expenses.category_id = categories.category_id`,
+                    (error, expenses) => {
+                      if (error) {
+                        console.log(error);
+                        return res.status(500).send("Error loading expenses data: " + error.message);
+                      }
+
+                      // Query total expenses
+                      db.query(
+                        "SELECT SUM(amount) AS total FROM expenses WHERE user_id = ?",
+                        [userId],
+                        (error, totalExpenses) => {
+                          if (error) {
+                            console.log(error);
+                            return res
+                              .status(500)
+                              .send("Error calculating total expenses: " + error.message);
+                          }
+
+                          // Query expenses by category
+                          db.query(
+                            `SELECT categories.name AS category_name, SUM(expenses.amount) AS total
+                            FROM expenses
+                            LEFT JOIN categories ON expenses.category_id = categories.category_id
+                            WHERE expenses.user_id = ?
+                            GROUP BY expenses.category_id`,
+                            [userId],
+                            (error, expensesByCategory) => {
+                              if (error) {
+                                console.log(error);
+                                return res
+                                  .status(500)
+                                  .send("Error calculating expenses by category: " + error.message);
+                              }
+
+                              // Render home.ejs with all the data
+                              res.render("home", {
+                                categories,
+                                income,
+                                totalIncome: totalIncome[0].total || 0,
+                                incomeByCategory,
+                                expenses,
+                                totalExpenses: totalExpenses[0].total || 0,
+                                expensesByCategory,
+                              });
+                            }
+                          );
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// Categories
+app.post("/categories/add", (req, res) => {
+  const { type, name, description } = req.body;
+  const userId = 1; // Replace with session user ID
+
+  db.query(
+    `INSERT INTO categories (type, name, description, user_id) VALUES (?, ?, ?, ?)`,
+    [type, name, description, userId],
+    (error) => {
+      if (error) return res.status(500).send("Error adding category: " + error.message);
+      res.redirect("/test");
+    }
+  );
+});
+
+app.post("/categories/delete/:id", (req, res) => {
+  const categoryId = req.params.id;
+
+  db.query(`DELETE FROM categories WHERE category_id = ?`, [categoryId], (error) => {
+    if (error) return res.status(500).send("Error deleting category: " + error.message);
+    res.redirect("/test");
+  });
+});
+
+// Income
+app.post("/income/add", (req, res) => {
+  const { type, amount, period, date, category_id } = req.body;
+  const userId = 1; // Replace with session user ID
+
+  db.query(
+    `INSERT INTO income (type, amount, period, date, category_id, user_id) VALUES (?, ?, ?, ?, ?, ?)`,
+    [type, amount, period, date, category_id, userId],
+    (error) => {
+      if (error) return res.status(500).send("Error adding income: " + error.message);
+      res.redirect("/test");
+    }
+  );
+});
+
+// Expenses
+app.post("/expenses/add", (req, res) => {
+  const { type, amount, description, date, category_id } = req.body;
+  const userId = 1; // Replace with session user ID
+
+  db.query(
+    `INSERT INTO expenses (type, amount, description, date, category_id, user_id) VALUES (?, ?, ?, ?, ?, ?)`,
+    [type, amount, description, date, category_id, userId],
+    (error) => {
+      if (error) return res.status(500).send("Error adding expense: " + error.message);
+      res.redirect("/test");
+    }
+  );
+});
+
 
 //aditional routes
 app.get("/wallet", (req, res) => {
   res.render("wallet.ejs");
 });
-app.get("/categories", (req, res) => {
-  res.render("categories.ejs");
-});
+ 
 
 app.get("/reports", (req, res) => {
   res.render("reports.ejs");

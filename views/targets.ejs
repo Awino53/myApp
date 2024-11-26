@@ -15,9 +15,9 @@
     <!-- Goal Editing Form -->
     <div id="goalForm">
       <h2>Edit Savings Goal</h2>
-      <form id="updateGoalForm">
-        <label for="goalId">Goal:</label>
-        <select id="goalId" name="goal_id">
+      <form id="updateGoalForm" style="padding: 10px">
+        <label for="goalId" style="padding: 10px; margin: 10px">Goal:</label>
+        <select id="goalId" name="goal_id" style="padding: 10px; margin: 10px">
           <% goals.forEach(goal => { %>
           <option value="<%= goal.goal_id %>">
             <%= goal.name %> (Target: <%= goal.target_amount %>, Saved: <%=
@@ -26,7 +26,9 @@
           <% }) %>
         </select>
         <br />
-        <label for="savedAmount">Amount Saved:</label>
+        <label for="savedAmount" style="padding: 10px; margin: 10px"
+          >Amount Saved:</label
+        >
         <input type="number" id="savedAmount" name="saved_amount" required />
         <button type="submit">Update</button>
       </form>
@@ -35,9 +37,15 @@
     <!-- Add New Goal -->
     <div id="addGoalForm">
       <h2>Add New Goal</h2>
-      <form id="newGoalForm">
+      <form id="newGoalForm" style="padding: 10px; margin: 10px">
         <label for="goalName">Goal Name:</label>
-        <input type="text" id="goalName" name="name" required />
+        <input
+          type="text"
+          id="goalName"
+          name="name"
+          required
+          style="padding: 5px; margin: 10px"
+        />
         <br />
         <label for="targetAmount">Target Amount:</label>
         <input type="number" id="targetAmount" name="target_amount" required />

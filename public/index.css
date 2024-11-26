@@ -1,0 +1,158 @@
+/* General Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f9f4; /* Light greenish background */
+  }
+  
+  /* Container for centering the content and adding a clean background */
+  .container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    background: #ffffff; /* White background for the content */
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: 1px solid #e5e5e5; /* Soft border for subtle separation */
+  }
+  
+  /* Header Styling */
+  h1, h2 {
+    text-align: center;
+    color: #2c6e49; /* Dark green for headers */
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  
+  /* Table Styling */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    color: #555; /* Dark gray text for readability */
+  }
+  
+  table th {
+    background-color: #4CAF50; /* Green background for table headers */
+    color: white; /* White text for headers */
+  }
+  
+  table td {
+    background-color: #f9f9f9; /* Light gray background for table rows */
+  }
+  
+  /* Form Styling */
+  form {
+    margin-bottom: 20px;
+  }
+  
+  /* Button Styling */
+  button {
+    background-color: #4CAF50; /* Green button background */
+    color: white; /* White text on buttons */
+    border: none;
+    padding: 12px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  /* Button Hover Effects */
+  button:hover {
+    background-color: #45a049; /* Slightly darker green on hover */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+  }
+  
+  /* Gold Buttons for Special Actions */
+  button.gold {
+    background-color: #FFD700; /* Gold button background */
+    color: #2c6e49; /* Dark green text */
+  }
+  
+  button.gold:hover {
+    background-color: #FFC107; /* Darker gold on hover */
+  }
+  
+  /* Additional Styling for Inputs and Selects */
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9; /* Light gray background for inputs */
+  }
+  
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #4CAF50; /* Green border on focus */
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);
+  }
+  
+  /* Overall Layout Adjustments */
+  .container {
+    max-width: 1000px; /* Max width for large screens */
+  }
+  
+  h1 {
+    font-size: 2.5em;
+  }
+  
+  h2 {
+    font-size: 1.8em;
+  }
+  
+  table th, table td {
+    font-size: 1.1em;
+  }
+  
+  form input, form select {
+    font-size: 1.1em;
+  }
+  
+  form label {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+  }
+  
+  /* Responsiveness: Adjustments for smaller screens */
+  @media (max-width: 768px) {
+    .container {
+      width: 90%;
+    }
+  
+    table th, table td {
+      padding: 8px;
+    }
+  
+    h1 {
+      font-size: 2em;
+    }
+  
+    h2 {
+      font-size: 1.5em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 1.7em;
+    }
+  
+    h2 {
+      font-size: 1.3em;
+    }
+  }
+  

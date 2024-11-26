@@ -1,52 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <link rel="stylesheet" href="/index.css" />
+    <title>Home</title>
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
     />
+     
   </head>
   <body>
-    <nav style="background-color: #09580c;">
+    <nav style="background-color: #09580c">
       <div class="image">
-        <img
-          src="/white-logo.png"
-          alt=""
-          height="70vh"
-        />
+        <img src="/white-logo.png" alt="" height="70vh" />
       </div>
 
       <div class="navigation">
         <ul>
           <li><a href="/home">home</a></li>
+
           <li><a href="/wallet">wallet</a></li>
           <li><a href="/targets">targets</a></li>
           <li><a href="/reports">reports</a></li>
           <li><a href="/help">help</a></li>
-           
         </ul>
-
+      </div>
+      <div class="icons">
         <ul class="last-nav">
           <li>
             <a href=""
-              ><i class="fa-solid fa-bell" style="color: #020a18"></i
+              ><i class="fa-solid fa-bell" style="color: #030912"></i
             ></a>
           </li>
           <li>
             <a href=""
-              ><i class="fa-solid fa-gear" style="color: #020c1d"></i
+              ><i class="fa-solid fa-gear" style="color: #040912"></i
             ></a>
           </li>
           <% if(locals.isLoggedIn){ %>
-            <a href="/home"></a>
-            <li><a href="/logout">log out</a></li>
-            <% }else{ %>
-            <a href="/signin">sign in</a>
+          <a href="/home"></a>
+          <li><a href="/logout">log out</a></li>
+          <% }else{ %>
+          <a href="/signin">sign in</a>
           <% } %>
-          
         </ul>
       </div>
     </nav>
@@ -70,7 +66,21 @@
     </div>
 
     <style>
-      body{
+      .icons{
+        margin-left: 100px;
+      }
+      .icons ul{
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        padding: 25px;
+        font-size: 1.3rem;
+      }
+      .icons a{
+        text-decoration: none;
+        color: #030912;
+      }
+      body {
         margin: 0;
         padding: 0;
       }
@@ -78,33 +88,30 @@
         display: flex;
         gap: 10px;
       }
-      .navigation{
-        display: flex;
-        gap: 140px;
-        padding: 30px;
-      }
-      .navigation ul{
+      .navigation {
         display: flex;
         gap: 30px;
-      
+        padding: 30px;
       }
-      .navigation li{
-        list-style: none; 
+      .navigation ul {
+        display: flex;
+        gap: 30px;
       }
-      .navigation a{
+      .navigation li {
+        list-style: none;
+      }
+      .navigation a {
         text-decoration: none;
         color: rgb(20, 21, 20);
         font-size: 1.3em;
         font-weight: bold;
         padding: 10px;
-    
       }
-      .navigation a:hover{
+      .navigation a:hover {
         border: 1px solid #4caf50;
         border-radius: 10px;
       }
-       
-      
+
       .calendar {
         text-align: center;
         padding: 40px;
@@ -145,10 +152,167 @@
         color: white;
         font-weight: bold;
       }
+      .notification {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 4px;
+      }
+
+      .notification.warning {
+        background-color: #ffcccb; /* Light red */
+        color: #800000; /* Dark red */
+        border: 1px solid #ff0000; /* Red border */
+      }
     </style>
 
-    <!-- <%- include('_footer.ejs') %> -->
+    <h1>Dashboard</h1>
 
-    <script src="index.js"></script>
+    <!-- Categories Section -->
+    <div class="categories" style="padding: 30px">
+      <h2>Categories</h2>
+      <form action="/categories/add" method="POST">
+        <label for="type">Type:</label>
+        <select id="type" name="type" required>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+          <option value="savings">Savings</option>
+        </select>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required />
+        <label for="description">Description:</label>
+        <textarea id="description" name="description"></textarea>
+        <button type="submit">Add Category</button>
+      </form>
+
+      <h3>Existing Categories</h3>
+      <ul>
+        <% categories.forEach(category => { %>
+        <li>
+          <%= category.name %> (<%= category.type %>)
+          <form
+            action="/categories/delete/<%= category.category_id %>"
+            method="POST"
+            style="display: inline"
+          >
+            <button type="submit">Delete</button>
+          </form>
+        </li>
+        <% }); %>
+      </ul>
+    </div>
+
+    <!-- Income Section -->
+    <div class="income" style="padding: 30px">
+      <h2>Income</h2>
+      <form action="/income/add" method="POST">
+        <label for="type">Type:</label>
+        <input type="text" id="type" name="type" required />
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" step="0.01" required />
+        <label for="period">Period:</label>
+        <input type="text" id="period" name="period" required />
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required />
+        <label for="category_id">Category:</label>
+        <select id="category_id" name="category_id">
+          <% categories.filter(c => c.type === 'income').forEach(category => {
+          %>
+          <option value="<%= category.category_id %>">
+            <%= category.name %>
+          </option>
+          <% }); %>
+        </select>
+        <button type="submit">Add Income</button>
+      </form>
+
+      <h3>Total Income: Ksh:<%= totalIncome %></h3>
+      <h4>Income by Category</h4>
+      <ul>
+        <% incomeByCategory.forEach(entry => { %>
+        <li><%= entry.category_name %>: Ksh<%= entry.total %></li>
+        <% }); %>
+      </ul>
+      <h4>Income Details</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Period</th>
+            <th>Date</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% income.forEach(entry => { %>
+          <tr>
+            <td><%= entry.type %></td>
+            <td><%= entry.amount %></td>
+            <td><%= entry.period %></td>
+            <td><%= entry.date %></td>
+            <td><%= entry.category_name %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Expenses Section -->
+    <div class="expenses" style="padding: 30px">
+      <h2>Expenses</h2>
+      <form action="/expenses/add" method="POST">
+        <label for="type">Type:</label>
+        <input type="text" id="type" name="type" required />
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" step="0.01" required />
+        <label for="description">Description:</label>
+        <textarea id="description" name="description"></textarea>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required />
+        <label for="category_id">Category:</label>
+        <select id="category_id" name="category_id">
+          <% categories.filter(c => c.type === 'expense').forEach(category => {
+          %>
+          <option value="<%= category.category_id %>">
+            <%= category.name %>
+          </option>
+          <% }); %>
+        </select>
+        <button type="submit">Add Expense</button>
+      </form>
+
+      <h3>Total Expenses: Ksh:<%= totalExpenses %></h3>
+      <h4>Expenses by Category</h4>
+      <ul>
+        <% expensesByCategory.forEach(entry => { %>
+        <li><%= entry.category_name %>: Ksh<%= entry.total %></li>
+        <% }); %>
+      </ul>
+      <h4>Expense Details</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% expenses.forEach(entry => { %>
+          <tr>
+            <td><%= entry.type %></td>
+            <td><%= entry.amount %></td>
+            <td><%= entry.description %></td>
+            <td><%= entry.date %></td>
+            <td><%= entry.category_name %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <script src="/index.js"></script>
   </body>
 </html>
