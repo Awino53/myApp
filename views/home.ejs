@@ -7,7 +7,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
     />
-     
   </head>
   <body>
     <nav style="background-color: #09580c">
@@ -66,17 +65,17 @@
     </div>
 
     <style>
-      .icons{
+      .icons {
         margin-left: 100px;
       }
-      .icons ul{
+      .icons ul {
         list-style: none;
         display: flex;
         gap: 20px;
         padding: 25px;
         font-size: 1.3rem;
       }
-      .icons a{
+      .icons a {
         text-decoration: none;
         color: #030912;
       }
@@ -186,7 +185,7 @@
 
       <h3>Existing Categories</h3>
       <ul>
-        <% categories.forEach(category => { %>
+        <% locals.categories.forEach(category => { %>
         <li>
           <%= category.name %> (<%= category.type %>)
           <form
@@ -312,6 +311,152 @@
         </tbody>
       </table>
     </div>
+
+    <title>Budget Tracker</title>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f4f4f4;
+      }
+    </style>
+
+    <div id="budget-tracker">
+      <h2>Budget Tracker</h2>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const userId = "your-user-id"; // Replace with the actual user ID
+        const budgetTrackerContainer =
+          document.getElementById("budget-tracker");
+
+        const fetchBudgets = async () => {
+          try {
+            const response = await fetch(`/budget-status/${userId}`);
+            const data = await response.json();
+
+            if (data.data) {
+              renderBudgets(data.data);
+            }
+          } catch (error) {
+            console.error("Error fetching budgets:", error);
+          }
+        };
+
+        const renderBudgets = (budgets) => {
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          const tbody = document.createElement("tbody");
+
+          // Table header
+          thead.innerHTML = `
+            <tr>
+                <th>Budget Name</th>
+                <th>Remaining</th>
+                <th>Status</th>
+            </tr>
+        `;
+
+          // Table body
+          budgets.forEach((budget) => {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = budget.name;
+
+            const remainingCell = document.createElement("td");
+            remainingCell.textContent = budget.remaining;
+            remainingCell.style.color = budget.color;
+
+            const statusCell = document.createElement("td");
+            statusCell.textContent = budget.status;
+
+            row.appendChild(nameCell);
+            row.appendChild(remainingCell);
+            row.appendChild(statusCell);
+
+            tbody.appendChild(row);
+          });
+
+          table.appendChild(thead);
+          table.appendChild(tbody);
+
+          // Clear previous content and append the table
+          budgetTrackerContainer.innerHTML = "";
+          budgetTrackerContainer.appendChild(table);
+        };
+
+        fetchBudgets();
+      });
+    </script>
+
+    <!-- for budget list -->
+
+    <div id="budget-list"></div>
+    <script src="budget-list.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const budgets = [
+          {
+            budget_id: 1,
+            name: "Groceries",
+            remaining: 500,
+            status: "Under Budget",
+            color: "green",
+          },
+          {
+            budget_id: 2,
+            name: "Rent",
+            remaining: -100,
+            status: "Over Budget",
+            color: "red",
+          },
+          {
+            budget_id: 3,
+            name: "Utilities",
+            remaining: 50,
+            status: "On Track",
+            color: "yellow",
+          },
+        ];
+
+        const container = document.getElementById("budget-list");
+
+        budgets.forEach((budget) => {
+          const budgetDiv = document.createElement("div");
+          budgetDiv.style.backgroundColor = budget.color;
+          budgetDiv.style.padding = "10px";
+          budgetDiv.style.margin = "10px";
+          budgetDiv.style.borderRadius = "5px";
+
+          const name = document.createElement("h3");
+          name.textContent = budget.name;
+
+          const remaining = document.createElement("p");
+          remaining.textContent = `Remaining: ${budget.remaining}`;
+
+          const status = document.createElement("p");
+          status.textContent = `Status: ${budget.status}`;
+
+          budgetDiv.appendChild(name);
+          budgetDiv.appendChild(remaining);
+          budgetDiv.appendChild(status);
+
+          container.appendChild(budgetDiv);
+        });
+      });
+    </script>
 
     <script src="/index.js"></script>
   </body>
