@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Savings Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+      }
+      .container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2 {
+        text-align: center;
+        color: #333;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      .progress-bar {
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .progress {
+        height: 20px;
+        background-color: #4caf50;
+        text-align: center;
+        color: white;
+      }
+      .form-section {
+        margin-top: 20px;
+      }
+      input,
+      select,
+      button {
+        padding: 10px;
+        margin: 5px 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Savings Dashboard</h1>
+      <h2>Saving Goals</h2>
+      <div id="goals-container"></div>
+
+      <h2>Add Savings</h2>
+      <div class="form-section">
+        <form id="add-saving-form">
+          <select id="goal-selector"></select>
+          <input
+            type="number"
+            id="saving-amount"
+            placeholder="Amount"
+            required
+          />
+          <button type="submit">Add Saving</button>
+        </form>
+      </div>
+
+      <h2>Create Recurring Contribution</h2>
+      <div class="form-section">
+        <form id="add-recurring-form">
+          <select id="recurring-goal-selector"></select>
+          <input
+            type="number"
+            id="recurring-amount"
+            placeholder="Amount"
+            required
+          />
+          <select id="recurring-frequency">
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </select>
+          <button type="submit">Add Recurring Saving</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      //const apiBaseUrl = "http://localhost:3000"; // Update with your backend URL
+      // Load Saving Goals
+      async function loadSavingGoals() {
+        const goalsContainer = document.getElementById("goals-container");
+        goalsContainer.innerHTML = "<p>Loading...</p>";
+        try {
+          const response = await fetch(`${apiBaseUrl}/saving-goals/1`); // Assuming user_id = 1
+          const goals = await response.json();
+          goalsContainer.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Goal Name</th>
+            <th>Target Amount</th>
+            <th>Saved Amount</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${goals
+            .map(
+              (goal) => `
+                <tr>
+                  <td>${goal.name}</td>
+                  <td>${goal.target_amount}</td>
+                  <td>${goal.saved_amount}</td>
+                  <td>
+                    <div class="progress-bar">
+                      <div class="progress" style="width: ${goal.progress}%">
+                        ${Math.round(goal.progress)}%
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+
+          // Populate dropdowns for adding savings
+          const goalSelector = document.getElementById("goal-selector");
+          const recurringGoalSelector = document.getElementById(
+            "recurring-goal-selector"
+          );
+          goalSelector.innerHTML = goals
+            .map(
+              (goal) => `<option value="${goal.goal_id}">${goal.name}</option>`
+            )
+            .join("");
+          recurringGoalSelector.innerHTML = goalSelector.innerHTML;
+        } catch (err) {
+          console.error(err);
+          goalsContainer.innerHTML = "<p>Error loading goals</p>";
+        }
+      }
+
+      // Add Saving Contribution
+      document
+        .getElementById("add-saving-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const goalId = document.getElementById("goal-selector").value;
+          const amount = document.getElementById("saving-amount").value;
+          try {
+            await fetch(`${apiBaseUrl}/savings`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: 1, amount, goal_id: goalId }), // Assuming user_id = 1
+            });
+            alert("Saving added successfully");
+            loadSavingGoals();
+          } catch (err) {
+            console.error(err);
+            alert("Error adding saving");
+          }
+        });
+
+      // Add Recurring Contribution
+      document
+        .getElementById("add-recurring-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const goalId = document.getElementById(
+            "recurring-goal-selector"
+          ).value;
+          const amount = document.getElementById("recurring-amount").value;
+          const frequency = document.getElementById(
+            "recurring-frequency"
+          ).value;
+          try {
+            await fetch(`${apiBaseUrl}/recurring-savings`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: 1,
+                goal_id: goalId,
+                amount,
+                frequency,
+              }), // Assuming user_id = 1
+            });
+            alert("Recurring saving created successfully");
+            loadSavingGoals();
+          } catch (err) {
+            console.error(err);
+            alert("Error creating recurring saving");
+          }
+        });
+
+      // Load initial data
+      loadSavingGoals();
+    </script>
+  </body>
+</html>

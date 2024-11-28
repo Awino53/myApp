@@ -239,311 +239,129 @@ app.get("/login", (req, res) => {
 });
 
 /* home page */
-
 app.get("/home", (req, res) => {
   const userId = 1; // Replace with the session user ID
 
-  // Query categories
-  db.query(
-    "SELECT * FROM categories WHERE user_id IS NULL OR user_id = ?",
-    [userId],
-    (error, categories) => {
-      if (error) {
-        console.log(error);
-        return res
-          .status(500)
-          .send("Error loading categories: " + error.message);
-      }
+  //fetch categories
+  function fetchCategories(callback) {
+    db.query(
+      "SELECT * FROM categories WHERE user_id IS NULL OR user_id = ?",
+      [userId],
+      callback
+    );
+  }
 
-      // Query income data
-      db.query(
-        `SELECT income.*, categories.name AS category_name 
-        FROM income 
-        LEFT JOIN categories ON income.category_id = categories.category_id`,
-        (error, income) => {
-          if (error) {
-            console.log(error);
-            return res
-              .status(500)
-              .send("Error loading income data: " + error.message);
-          }
+  //fetch income
+  function fetchIncome(callback) {
+    db.query(
+      `SELECT income.*, categories.name AS category_name 
+      FROM income 
+      LEFT JOIN categories ON income.category_id = categories.category_id`,
+      callback
+    );
+  }
 
-          // Query total income
-          db.query(
-            "SELECT SUM(amount) AS total FROM income WHERE user_id = ?",
-            [userId],
-            (error, totalIncome) => {
-              if (error) {
-                console.log(error);
-                return res
-                  .status(500)
-                  .send("Error calculating total income: " + error.message);
-              }
+  //fetch total income
+  function fetchTotalIncome(callback) {
+    db.query(
+      "SELECT SUM(amount) AS total FROM income WHERE user_id = ?",
+      [userId],
+      callback
+    );
+  }
 
-              // Query income by category
-              db.query(
-                `SELECT categories.name AS category_name, SUM(income.amount) AS total
-                FROM income
-                LEFT JOIN categories ON income.category_id = categories.category_id
-                WHERE income.user_id = ?
-                GROUP BY income.category_id`,
-                [userId],
-                (error, incomeByCategory) => {
-                  if (error) {
-                    console.log(error);
-                    return res
-                      .status(500)
-                      .send(
-                        "Error calculating income by category: " + error.message
-                      );
-                  }
+  //fetch expenses
+  function fetchExpenses(callback) {
+    db.query(
+      `SELECT expenses.*, categories.name AS category_name 
+      FROM expenses 
+      LEFT JOIN categories ON expenses.category_id = categories.category_id`,
+      callback
+    );
+  }
 
-                  // Query expenses data
-                  db.query(
-                    `SELECT expenses.*, categories.name AS category_name 
-                    FROM expenses 
-                    LEFT JOIN categories ON expenses.category_id = categories.category_id`,
-                    (error, expenses) => {
-                      if (error) {
-                        console.log(error);
-                        return res
-                          .status(500)
-                          .send(
-                            "Error loading expenses data: " + error.message
-                          );
-                      }
+  //fetch total expenses
+  function fetchTotalExpenses(callback) {
+    db.query(
+      "SELECT SUM(amount) AS total FROM expenses WHERE user_id = ?",
+      [userId],
+      callback
+    );
+  }
 
-                      // Query total expenses
-                      db.query(
-                        "SELECT SUM(amount) AS total FROM expenses WHERE user_id = ?",
-                        [userId],
-                        (error, totalExpenses) => {
-                          if (error) {
-                            console.log(error);
-                            return res
-                              .status(500)
-                              .send(
-                                "Error calculating total expenses: " +
-                                  error.message
-                              );
-                          }
+  //fetch budet
+  function fetchBudget(callback) {
+    db.query(
+      `SELECT name, amount, period 
+      FROM budgets 
+      WHERE user_id = ?`,
+      [userId],
+      callback
+    );
+  }
 
-                          // Query expenses by category
-                          db.query(
-                            `SELECT categories.name AS category_name, SUM(expenses.amount) AS total
-                            FROM expenses
-                            LEFT JOIN categories ON expenses.category_id = categories.category_id
-                            WHERE expenses.user_id = ?
-                            GROUP BY expenses.category_id`,
-                            [userId],
-                            (error, expensesByCategory) => {
-                              if (error) {
-                                console.log(error);
-                                return res
-                                  .status(500)
-                                  .send(
-                                    "Error calculating expenses by category: " +
-                                      error.message
-                                  );
-                              }
+  //fetch notification
+  function fetchNotifications(callback) {
+    db.query(
+      `SELECT title, message, is_read, created_at 
+      FROM notifications 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC LIMIT 10`,
+      [userId],
+      callback
+    );
+  }
 
-                              /* to be tested */
+  //fetch categories
+  fetchCategories((err, categories) => {
+    if (err) return res.status(500).send("Error loading categories");
 
-                              /* for tarcking budget */
+    fetchIncome((err, income) => {
+      if (err) return res.status(500).send("Error loading income");
 
-                              /* app.get("/budget-status/:user_id", (req, res) => {
-                                const userId = req.params.user_id; */
+      fetchTotalIncome((err, totalIncome) => {
+        if (err) return res.status(500).send("Error calculating income");
 
-                                // Get all budgets for the user
-                                db.query(
-                                  `SELECT * FROM budget WHERE user_id = ?`,
-                                  [userId],
-                                  (err, budgets) => {
-                                    if (err) {
-                                      return res
-                                        .status(500)
-                                        .json({
-                                          status: "error",
-                                          message: err.message,
-                                        });
-                                    }
-                                    function checkBudgetsAndNotify(
-                                      budgets,
-                                      userId,
-                                      sendNotification
-                                    ) {
-                                      budgets.forEach((budget) => {
-                                        if (budget.remaining < 0) {
-                                          sendNotification(
-                                            userId,
-                                            `You are over budget for ${budget.name}!`,
-                                            (err) => {
-                                              if (err) {
-                                                console.error(
-                                                  `Failed to send notification for budget ${budget.name}:`,
-                                                  err.message
-                                                );
-                                              } else {
-                                                console.log(
-                                                  `Notification sent for budget ${budget.name}`
-                                                );
-                                              }
-                                            }
-                                          );
-                                        }
-                                      });
-                                    }
-                                    // Get total income
-                                    db.query(
-                                      `SELECT SUM(amount) as total_income FROM income WHERE user_id = ?`,
-                                      [userId],
-                                      (err, incomeResult) => {
-                                        if (err) {
-                                          return res
-                                            .status(500)
-                                            .json({
-                                              status: "error",
-                                              message: err.message,
-                                            });
-                                        }
+        fetchExpenses((err, expenses) => {
+          if (err) return res.status(500).send("Error loading expenses");
 
-                                        const totalIncome =
-                                          (incomeResult[0] &&
-                                            incomeResult[0].total_income) ||
-                                          0;
+          fetchTotalExpenses((err, totalExpenses) => {
+            if (err) return res.status(500).send("Error calculating expenses");
 
-                                        // Get total expenses
-                                        db.query(
-                                          `SELECT SUM(amount) as total_expenses FROM expenses WHERE user_id = ?`,
-                                          [userId],
-                                          (err, expenseResult) => {
-                                            if (err) {
-                                              return res
-                                                .status(500)
-                                                .json({
-                                                  status: "error",
-                                                  message: err.message,
-                                                });
-                                            }
+            fetchBudget((err, budget) => {
+              if (err) return res.status(500).send("Error loading budget");
 
-                                            const totalExpenses =
-                                              (expenseResult[0] &&
-                                                expenseResult[0]
-                                                  .total_expenses) ||
-                                              0;
+              fetchNotifications((err, notifications) => {
+                if (err)
+                  return res.status(500).send("Error loading notifications");
 
-                                            const results = budgets.map(
-                                              (budget) => {
-                                                const remaining =
-                                                  totalIncome -
-                                                  totalExpenses -
-                                                  budget.amount;
+                // Calculate budget comparison
+                const isOverBudget =
+                  totalExpenses[0]?.total > (budget[0]?.amount || 0);
 
-                                                return {
-                                                  ...budget,
-                                                  remaining,
-                                                  status:
-                                                    remaining < 0
-                                                      ? "Over Budget"
-                                                      : "Under Budget",
-                                                  color:
-                                                    remaining < 0
-                                                      ? "red"
-                                                      : "green",
-                                                };
-                                              }
-                                            );
+                // Filter unread notifications
+                const unreadNotifications = notifications.filter(
+                  (n) => !n.is_read
+                );
 
-                                           /*  res.render("home", {
-                                              status: "success",
-                                              data: results,
-                                            }); */
-                                          }
-                                        );
-                                      }
-                                    );
-                                  }
-                                );
-                              /* }); */
-
-                              /* for notifications */
-                              const sendNotification = (userId, message, callback) => { 
-                                // Ensure db is properly connected and initialized before calling this
-                                db.query(
-                                  `INSERT INTO notifications (user_id, message, created_at) VALUES (?, ?, NOW())`,
-                                  [userId, message],  // Prevent SQL injection by using parameterized queries
-                                  (err, result) => {
-                                    if (callback) {
-                                      callback(err, result);  // Calls the callback with error or result
-                                    } else {
-                                      // Optionally handle the case where no callback is passed (e.g., logging)
-                                      if (err) {
-                                        console.error('Error inserting notification:', err);
-                                      } else {
-                                        console.log('Notification inserted:', result);
-                                      }
-                                    }
-                                  }
-                                );
-                              };
-                              
-
-                              /* app.get("/notifications/:user_id", (req, res) => {
-                                const userId = req.params.user_id; */
-
-                                db.query(
-                                  `SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC`,
-                                  [userId],
-                                  (err, notifications) => {
-                                    if (err) {
-                                      return res
-                                        .status(500)
-                                        .json({
-                                          status: "error",
-                                          message: err.message,
-                                        });
-                                    }
-
-                                    /* res.render("home", {
-                                      status: "success",
-                                      data: notifications,
-                                    }); */
-                                  }
-                                );
-                              /* }); */
-
-                              // Render home.ejs with all the data
-                              res.render("home", {
-                                categories,
-                                income,
-                                totalIncome: totalIncome[0].total || 0,
-                                incomeByCategory,
-                                expenses,
-                                totalExpenses: totalExpenses[0].total || 0,
-                                expensesByCategory,
- 
-                                budgets,
-                                incomeResult,
-                                expenseResult,
-                                result,
-                                sendNotification,
-                  
-                                  
-                              });
-                            }
-                          );
-                        }
-                      );
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
-    }
-  );
+                // Render the home page with enhanced data
+                res.render("home", {
+                  categories,
+                  income,
+                  totalIncome: totalIncome[0]?.total || 0,
+                  expenses,
+                  totalExpenses: totalExpenses[0]?.total || 0,
+                  budget,
+                  isOverBudget,
+                  unreadNotifications,
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 });
 
 // Categories
@@ -610,6 +428,155 @@ app.post("/expenses/add", (req, res) => {
   );
 });
 
+/* bills */
+// Add a new bill
+app.post('/bills', (req, res) => {
+  const { user_id, name, description, payment_date, amount, recurring, frequency } = req.body;
+
+  db.query(
+      `INSERT INTO bills (user_id, name, description, payment_date, amount, recurring, frequency)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, name, description, payment_date, amount, recurring, frequency],
+      (err, result) => {
+          if (err) {
+              return res.status(500).json({ error: err.message });
+          }
+          res.status(201).json({ message: 'Bill added successfully!', bill_id: result.insertId });
+      }
+  );
+});
+
+// Mark a bill as paid and update the budget
+app.put('/bills/:bill_id/pay', (req, res) => {
+  const { bill_id } = req.params;
+  const { user_id } = req.body; // Assuming user_id is sent
+
+  // Fetch the bill details
+  db.query(`SELECT amount FROM bills WHERE bill_id = ?`, [bill_id], (err, bill) => {
+      if (err) {
+          return res.status(500).json({ error: err.message });
+      }
+
+      if (bill.length === 0) return res.status(404).json({ error: 'Bill not found' });
+
+      const billAmount = bill[0].amount;
+
+      // Update the budget's remaining amount
+      db.query(
+          `UPDATE budget 
+           SET remaining_amount = remaining_amount - ? 
+           WHERE user_id = ? AND period = 'monthly'`,
+          [billAmount, user_id],
+          (err, budget) => {
+              if (err) {
+                  return res.status(500).json({ error: err.message });
+              }
+
+              if (budget.affectedRows === 0) {
+                  return res.status(404).json({ error: 'Budget not found' });
+              }
+
+              res.json({ message: 'Bill paid and budget updated successfully!' });
+          }
+      );
+  });
+});
+
+// Get unpaid bills
+app.get('/bills', (req, res) => {
+  const { user_id } = req.query; // Assuming user_id is passed as a query param
+
+  db.query(
+      `SELECT * FROM bills WHERE user_id = ? AND payment_date >= CURDATE()`,
+      [user_id],
+      (err, bills) => {
+          if (err) {
+              return res.status(500).json({ error: err.message });
+          }
+          res.json(bills);
+      }
+  );
+});
+
+// Get bills linked to a specific budget period
+app.get('/bills/linked', (req, res) => {
+  const { user_id } = req.query;
+
+  db.query(
+      `SELECT b.* FROM bills b
+       JOIN budget bu ON b.user_id = bu.user_id
+       WHERE b.payment_date BETWEEN bu.created_at AND DATE_ADD(bu.created_at, INTERVAL 1 MONTH)
+       AND b.user_id = ?`,
+      [user_id],
+      (err, bills) => {
+          if (err) {
+              return res.status(500).json({ error: err.message });
+          }
+          res.json(bills);
+      }
+  );
+});
+
+
+/* savings */
+// 1. Add a Saving Contribution
+app.post('/savings', (req, res) => {
+  const { user_id, amount, goal_id } = req.body;
+  const sql = 'INSERT INTO Savings (user_id, amount, goal_id) VALUES (?, ?, ?)';
+  db.query(sql, [user_id, amount, goal_id], (err, result) => {
+    if (err) {
+      return res.status(500).send({ message: 'Error adding saving', error: err.message });
+    }
+    res.send({ message: 'Saving added', id: result.insertId });
+  });
+});
+
+// 2. Create a Savings Goal
+app.post('/saving-goals', (req, res) => {
+  const { user_id, name, target_amount, deadline, priority } = req.body;
+  const sql =
+    'INSERT INTO Saving_Goals (user_id, name, target_amount, deadline, priority) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [user_id, name, target_amount, deadline, priority], (err, result) => {
+    if (err) {
+      return res.status(500).send({ message: 'Error creating saving goal', error: err.message });
+    }
+    res.send({ message: 'Saving goal created', id: result.insertId });
+  });
+});
+
+// 3. Add a Recurring Saving
+app.post('/recurring-savings', (req, res) => {
+  const { user_id, goal_id, amount, frequency, start_date, end_date } = req.body;
+  const sql =
+    'INSERT INTO Recurring_Savings (user_id, goal_id, amount, frequency, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(sql, [user_id, goal_id, amount, frequency, start_date, end_date], (err, result) => {
+    if (err) {
+      return res.status(500).send({ message: 'Error creating recurring saving', error: err.message });
+    }
+    res.send({ message: 'Recurring saving created', id: result.insertId });
+  });
+});
+
+// 4. Get All Saving Goals with Progress
+app.get('/saving-goals/:user_id', (req, res) => {
+  const { user_id } = req.params;
+  const sql = `
+    SELECT g.goal_id, g.name, g.target_amount, g.saved_amount, g.deadline, g.priority, 
+           (g.saved_amount / g.target_amount) * 100 AS progress
+    FROM Saving_Goals g
+    WHERE g.user_id = ?
+  `;
+  db.query(sql, [user_id], (err, results) => {
+    if (err) {
+      return res.status(500).send({ message: 'Error retrieving saving goals', error: err.message });
+    }
+    res.send(results);
+  });
+});
+
+
+
+
 //aditional routes
 app.get("/wallet", (req, res) => {
   res.render("wallet.ejs");
@@ -621,7 +588,7 @@ app.get("/reports", (req, res) => {
 app.get("/profile", (req, res) => {
   res.render("profile.ejs");
 });
-//this is target space
+/* //this is target space
 // Fetch all goals for the logged-in user
 app.get("/targets", (req, res) => {
   if (!req.session.isLoggedIn) {
@@ -676,7 +643,7 @@ app.post("/update-goal", (req, res) => {
     }
     res.redirect("/targets");
   });
-});
+}); */
 
 //footer landing page
 app.get("/terms", (req, res) => {

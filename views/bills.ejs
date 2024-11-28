@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="bills-dashboard">
+      <h1>Bills Dashboard</h1>
+
+      <!-- Section: Add New Bill -->
+      <div id="add-bill-form">
+        <h2>Add a New Bill</h2>
+        <form id="new-bill-form">
+          <input type="text" id="bill-name" placeholder="Bill Name" required />
+          <textarea id="bill-description" placeholder="Description"></textarea>
+          <input type="date" id="bill-payment-date" required />
+          <input type="number" id="bill-amount" placeholder="Amount" required />
+          <label>
+            Recurring:
+            <input type="checkbox" id="bill-recurring" />
+          </label>
+          <select id="bill-frequency">
+            <option value="">Select Frequency</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+          <button type="submit">Add Bill</button>
+        </form>
+      </div>
+
+      <!-- Section: Upcoming Bills -->
+      <div id="upcoming-bills">
+        <h2>Upcoming Bills</h2>
+        <ul id="bills-list"></ul>
+      </div>
+
+      <!-- Section: Budget Impact -->
+      <div id="budget-impact">
+        <h2>Budget Impact</h2>
+        <div id="budget-progress">
+          <progress id="budget-progress-bar" value="0" max="100"></progress>
+          <p id="budget-status-text"></p>
+        </div>
+      </div>
+      <style>
+        #bills-dashboard {
+          font-family: Arial, sans-serif;
+          max-width: 800px;
+          margin: 20px auto;
+        }
+
+        #add-bill-form,
+        #upcoming-bills,
+        #budget-impact {
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 20px;
+        }
+
+        form input,
+        form textarea,
+        form select {
+          display: block;
+          width: 100%;
+          margin-bottom: 10px;
+          padding: 8px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+
+        button {
+          background-color: #28a745;
+          color: #fff;
+          padding: 10px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        button:hover {
+          background-color: #218838;
+        }
+
+        #budget-progress-bar {
+          width: 100%;
+          height: 20px;
+        }
+      </style>
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const billsList = document.getElementById("bills-list");
+          const budgetProgressBar = document.getElementById(
+            "budget-progress-bar"
+          );
+          const budgetStatusText =
+            document.getElementById("budget-status-text");
+          const newBillForm = document.getElementById("new-bill-form");
+
+          // Fetch and Display Bills
+          function fetchBills() {
+            fetch("/bills?user_id=1") // Replace with dynamic user_id
+              .then((response) => response.json())
+              .then((bills) => {
+                billsList.innerHTML = "";
+                bills.forEach((bill) => {
+                  const listItem = document.createElement("li");
+                  listItem.innerHTML = `
+                  <strong>${bill.name}</strong> - ${bill.amount} USD due on ${bill.payment_date}
+                  [Status: ${bill.status}]
+                  <button class="mark-paid" data-id="${bill.bill_id}">Mark as Paid</button>
+                `;
+                  billsList.appendChild(listItem);
+                });
+              });
+          }
+
+          // Fetch and Update Budget Impact
+          function fetchBudgetImpact() {
+            fetch("/budget?user_id=1") // Replace with dynamic user_id
+              .then((response) => response.json())
+              .then((budget) => {
+                const remaining = budget.remaining_amount;
+                const total = budget.amount;
+                const progress = Math.round((remaining / total) * 100);
+
+                budgetProgressBar.value = progress;
+                budgetStatusText.innerText = `${remaining} USD remaining out of ${total} USD`;
+              });
+          }
+
+          // Add a New Bill
+          newBillForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const billData = {
+              user_id: 1, // Replace with dynamic user_id
+              name: document.getElementById("bill-name").value,
+              description: document.getElementById("bill-description").value,
+              payment_date: document.getElementById("bill-payment-date").value,
+              amount: parseFloat(document.getElementById("bill-amount").value),
+              recurring: document.getElementById("bill-recurring").checked,
+              frequency:
+                document.getElementById("bill-frequency").value || null,
+            };
+
+            fetch("/bills", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(billData),
+            })
+              .then((response) => response.json())
+              .then(() => {
+                fetchBills();
+                fetchBudgetImpact();
+              });
+          });
+
+          // Mark a Bill as Paid
+          billsList.addEventListener("click", (e) => {
+            if (e.target.classList.contains("mark-paid")) {
+              const billId = e.target.dataset.id;
+
+              fetch(`/bills/${billId}/pay`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: 1 }), // Replace with dynamic user_id
+              })
+                .then((response) => response.json())
+                .then(() => {
+                  fetchBills();
+                  fetchBudgetImpact();
+                });
+            }
+          });
+
+          // Initial Fetch
+          fetchBills();
+          fetchBudgetImpact();
+        });
+      </script>
+    </div>
+  </body>
+</html>
